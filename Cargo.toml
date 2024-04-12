@@ -1,0 +1,19 @@
+[package]
+name = "waki285bot"
+version = "0.1.0"
+edition = "2021"
+
+default-run = "main"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mwbot = "0.6.1"
+regex = "1.10.4"
+tokio = { version = "1.37.0", features = ["full"] }
+#mediawiki_parser = "0.4.2"
+#tokio-cron-scheduler = "0.10.0"
