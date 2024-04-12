@@ -72,14 +72,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(async move {
         let bot = Arc::clone(&bot_clone);
         loop {
-            // 12時間
-            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60 * 12)).await;
             let status = check_status(bot.clone()).await;
             if !status {
                 println!("status is false");
                 tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
                 continue;
             }
+
+            println!("cleaning sandbox");
+
             let page = bot.page("Meta:Sandbox").unwrap();
             page.save(
                 "{{Please leave this line alone (sandbox heading)}}",
@@ -87,6 +88,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .await
             .unwrap();
+
+            // 12時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60 * 12)).await;
         }
     });
 
@@ -95,8 +99,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let bot_clone2 = Arc::clone(&bot_clone2);
         loop {
             let bot = bot_clone2.clone();
-            // 1時間
-            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+
+            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
 
             let status = check_status(bot.clone()).await;
             if !status {
@@ -162,7 +166,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .unwrap()
                     .iter()
                     .map(|x| x.as_str().unwrap().to_string())
-                    .filter(|s| !IMPLICIT_GROUPS.contains(&s.as_str()) && !GLOBAL_TEMPORAL_GROUPS.contains(&s.as_str()))
+                    .filter(|s| {
+                        !IMPLICIT_GROUPS.contains(&s.as_str())
+                            && !GLOBAL_TEMPORAL_GROUPS.contains(&s.as_str())
+                    })
                     .collect();
                 if !groups.contains_key(name) {
                     groups.insert(name.to_string(), group.clone());
@@ -170,7 +177,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     groups.get_mut(name).unwrap().extend(group.clone());
                 }
                 if group.contains("steward") {
-                    groups.get_mut(name).unwrap().insert("wiki-creator".to_string());
+                    groups
+                        .get_mut(name)
+                        .unwrap()
+                        .insert("wiki-creator".to_string());
                 }
             }
 
@@ -203,6 +213,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             page.save(&text, &SaveOptions::summary(&summary("update othergroups")))
                 .await
                 .unwrap();
+            // 1時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
     });
 
@@ -211,8 +223,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let bot_clone3 = Arc::clone(&bot_clone3);
         loop {
             let bot = bot_clone3.clone();
-            // 1時間
-            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+
+            tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+
             let status = check_status(bot.clone()).await;
             if !status {
                 println!("status is false");
@@ -249,6 +262,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             page.save(&text, &SaveOptions::summary(&summary("remove marker")))
                 .await
                 .unwrap();
+
+            // 1時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
     });
 
@@ -258,8 +274,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         loop {
             let bot = bot_clone4.clone();
 
-            // 1時間
-            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(40)).await;
 
             let status = check_status(bot.clone()).await;
             if !status {
@@ -288,12 +303,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut global_text = global.wikitext().await.unwrap();
             let global_sections = extract_sections_with_titles(&global_text);
             for (_title, section) in global_sections {
-                if !section.to_lowercase().contains("{{status") && !section.to_lowercase().contains("{{permission") {
+                if !section.to_lowercase().contains("{{status")
+                    && !section.to_lowercase().contains("{{permission")
+                {
                     let new_section = "{{status}}\n".to_string() + &section.trim_start();
                     global_text = global_text.replace(&section, &new_section);
                 }
             }
-            global.save(&global_text, &SaveOptions::summary(&summary("add status")))
+            global
+                .save(&global_text, &SaveOptions::summary(&summary("add status")))
                 .await
                 .unwrap();
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
@@ -307,7 +325,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     reports_text = reports_text.replace(&section, &new_section);
                 }
             }
-            reports.save(&reports_text, &SaveOptions::summary(&summary("add status")))
+            reports
+                .save(&reports_text, &SaveOptions::summary(&summary("add status")))
                 .await
                 .unwrap();
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
@@ -330,7 +349,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut misc_text = misc.wikitext().await.unwrap();
             let misc_sections = extract_sections_with_titles(&misc_text);
             for (_title, section) in misc_sections {
-                if !section.to_lowercase().contains("{{status") && !section.to_lowercase().contains("{{sn") && !section.to_lowercase().contains("{{permission") {
+                if !section.to_lowercase().contains("{{status")
+                    && !section.to_lowercase().contains("{{sn")
+                    && !section.to_lowercase().contains("{{permission")
+                {
                     let new_section = "{{status}}\n".to_string() + &section.trim_start();
                     misc_text = misc_text.replace(&section, &new_section);
                 }
@@ -339,6 +361,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .await
                 .unwrap();
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+            // 1時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
     });
 
