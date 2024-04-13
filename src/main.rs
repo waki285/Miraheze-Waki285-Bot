@@ -75,7 +75,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let status = check_status(bot.clone()).await;
             if !status {
                 println!("status is false");
-                tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+
                 continue;
             }
 
@@ -105,7 +107,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let status = check_status(bot.clone()).await;
             if !status {
                 println!("status is false");
-                tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+
                 continue;
             }
             println!("othergroups");
@@ -229,7 +233,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let status = check_status(bot.clone()).await;
             if !status {
                 println!("status is false");
-                tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+
                 continue;
             }
 
@@ -279,7 +285,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let status = check_status(bot.clone()).await;
             if !status {
                 println!("status is false");
-                tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
                 continue;
             }
 
