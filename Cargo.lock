@@ -1992,6 +1992,7 @@ name = "waki285bot"
 version = "0.1.0"
 dependencies = [
  "mwbot",
+ "once_cell",
  "regex",
  "tokio",
 ]

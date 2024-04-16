@@ -1,10 +1,9 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    path::Path,
-    sync::Arc,
+    collections::{HashMap, HashSet, VecDeque}, path::Path, sync::Arc
 };
 
 use mwbot::SaveOptions;
+use once_cell::sync::Lazy;
 use regex::Regex;
 
 fn summary(s: &str) -> String {
@@ -14,6 +13,11 @@ fn summary(s: &str) -> String {
 const IMPLICIT_GROUPS: [&str; 3] = ["*", "user", "autoconfirmed"];
 const TEMPORAL_GROUPS: [&str; 4] = ["checkuser", "suppress", "electionadmin", "flood"];
 const GLOBAL_TEMPORAL_GROUPS: [&str; 1] = ["global-flood"];
+
+const REWRITE_GROUPS: Lazy<HashMap<&str, &str>> = Lazy::new(|| [
+    ("trustandsafety", "trust-and-safety"),
+].into_iter().collect());
+
 static STATUS_PAGE: &str = "User:Waki285-Bot/status";
 
 async fn check_status(bot: Arc<mwbot::Bot>) -> bool {
@@ -136,7 +140,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if name == "⧼abusefilter-blocker⧽" || name == "Abuse filter" {
                     continue;
                 }
-                let group = user["groups"]
+                let mut group: HashSet<_> = user["groups"]
                     .as_array()
                     .unwrap()
                     .iter()
@@ -146,6 +150,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             && !TEMPORAL_GROUPS.contains(&s.as_str())
                     })
                     .collect();
+                // rewrite
+                for (from, to) in REWRITE_GROUPS.iter() {
+                    if group.contains(from.to_owned()) {
+                        group.remove(from.to_owned());
+                        group.insert(to.to_string());
+                    }
+                }
+
                 groups.insert(name.to_string(), group);
             }
 

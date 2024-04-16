@@ -15,5 +15,6 @@ path = "src/main.rs"
 mwbot = "0.6.1"
 regex = "1.10.4"
 tokio = { version = "1.37.0", features = ["full"] }
+once_cell = "1.19.0"
 #mediawiki_parser = "0.4.2"
 #tokio-cron-scheduler = "0.10.0"
