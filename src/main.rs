@@ -1,5 +1,7 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque}, path::Path, sync::Arc
+    collections::{HashMap, HashSet, VecDeque},
+    path::Path,
+    sync::Arc,
 };
 
 use mwbot::SaveOptions;
@@ -14,16 +16,22 @@ const IMPLICIT_GROUPS: [&str; 3] = ["*", "user", "autoconfirmed"];
 const TEMPORAL_GROUPS: [&str; 4] = ["checkuser", "suppress", "electionadmin", "flood"];
 const GLOBAL_TEMPORAL_GROUPS: [&str; 1] = ["global-flood"];
 
-const REWRITE_GROUPS: Lazy<HashMap<&str, &str>> = Lazy::new(|| [
-    ("trustandsafety", "trust-and-safety"),
-].into_iter().collect());
+const REWRITE_GROUPS: Lazy<HashMap<&str, &str>> = Lazy::new(|| {
+    [("trustandsafety", "trust-and-safety")]
+        .into_iter()
+        .collect()
+});
 
 static STATUS_PAGE: &str = "User:Waki285-Bot/status";
 
 async fn check_status(bot: Arc<mwbot::Bot>) -> bool {
-    let page = bot.page(STATUS_PAGE).unwrap();
-    let text = page.wikitext().await.unwrap();
-    text.contains("true")
+    let page = bot.page(STATUS_PAGE);
+    if let Ok(p) = page {
+        let text = p.wikitext().await.unwrap_or("false".to_string());
+        text.contains("true")
+    } else {
+        false
+    }
 }
 
 fn extract_sections_with_titles(text: &str) -> Vec<(String, String)> {
@@ -87,13 +95,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("cleaning sandbox");
 
-            let page = bot.page("Meta:Sandbox").unwrap();
-            page.save(
-                "{{Please leave this line alone (sandbox heading)}}",
-                &SaveOptions::summary(&summary("cleaning sandbox")),
-            )
-            .await
-            .unwrap();
+            match bot.page("Meta:Sandbox") {
+                Ok(page) => {
+                    let result = page
+                        .save(
+                            "{{Please leave this line alone (sandbox heading)}}",
+                            &SaveOptions::summary(&summary("cleaning sandbox")),
+                        )
+                        .await;
+
+                    if let Err(e) = result {
+                        println!("Error saving page: {:?}", e);
+                    }
+                }
+                Err(e) => {
+                    println!("Error retrieving page: {:?}", e);
+                }
+            }
 
             // 12時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60 * 12)).await;
@@ -131,8 +149,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     ("format", "json"),
                     ("formatversion", "2"),
                 ])
-                .await
-                .unwrap();
+                .await;
+            if data.is_err() {
+                dbg!(data.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let data = data.unwrap();
             let arr = data["query"]["allusers"].as_array().unwrap();
             let mut groups: HashMap<String, HashSet<String>> = HashMap::new();
             for user in arr {
@@ -172,8 +196,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     ("format", "json"),
                     ("formatversion", "2"),
                 ])
-                .await
-                .unwrap();
+                .await;
+            if data2.is_err() {
+                dbg!(data2.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let data2 = data2.unwrap();
             let arr2 = data2["query"]["globalallusers"].as_array().unwrap();
             for user in arr2 {
                 let name = user["name"].as_str().unwrap();
@@ -225,10 +255,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             text.push_str("}\n");
 
-            let page = bot.page("Module:Othergroups/data").unwrap();
-            page.save(&text, &SaveOptions::summary(&summary("update othergroups")))
-                .await
-                .unwrap();
+            let page = bot.page("Module:Othergroups/data");
+
+            if let Ok(p) = page {
+                let result = p
+                    .save(&text, &SaveOptions::summary(&summary("update othergroups")))
+                    .await;
+
+                if let Err(e) = result {
+                    println!("Error saving page: {:?}", e);
+                }
+            } else {
+                println!("Error retrieving page: {:?}", page.unwrap_err());
+            }
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
@@ -254,7 +293,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // remove marker
             println!("remove marker");
 
-            let page = bot.page("Meta:Requests for permissions").unwrap();
+            let page = bot.page("Meta:Requests for permissions");
+            if page.is_err() {
+                println!("Error retrieving page: {:?}", page.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let page = page.unwrap();
             let mut text = page.wikitext().await.unwrap();
 
             // section で分割
@@ -277,9 +323,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 text = text.replace(&section, &replaced);
             }
 
-            page.save(&text, &SaveOptions::summary(&summary("remove marker")))
+            match page
+                .save(&text, &SaveOptions::summary(&summary("remove marker")))
                 .await
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error saving page: {:?}", e);
+                }
+            }
 
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
@@ -304,7 +356,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("add status");
 
-            let an = bot.page("Meta:Administrators'_noticeboard").unwrap();
+            let an = bot.page("Meta:Administrators'_noticeboard");
+            if an.is_err() {
+                println!("Error retrieving page: {:?}", an.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let an = an.unwrap();
             let mut an_text = an.wikitext().await.unwrap();
             let an_sections = extract_sections_with_titles(&an_text);
             for (_title, section) in an_sections {
@@ -313,12 +372,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     an_text = an_text.replace(&section, &new_section);
                 }
             }
-            an.save(&an_text, &SaveOptions::summary(&summary("add status")))
+            match an
+                .save(&an_text, &SaveOptions::summary(&summary("add status")))
                 .await
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error saving page: {:?}", e);
+                }
+            }
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-            let global = bot.page("Steward_requests/Global").unwrap();
+            let global = bot.page("Steward_requests/Global");
+            if global.is_err() {
+                println!("Error retrieving page: {:?}", global.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let global = global.unwrap();
             let mut global_text = global.wikitext().await.unwrap();
             let global_sections = extract_sections_with_titles(&global_text);
             for (_title, section) in global_sections {
@@ -329,13 +401,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     global_text = global_text.replace(&section, &new_section);
                 }
             }
-            global
+            match global
                 .save(&global_text, &SaveOptions::summary(&summary("add status")))
                 .await
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error saving page: {:?}", e);
+                }
+            }
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-            let reports = bot.page("Steward_requests/Wiki_reports").unwrap();
+            let reports = bot.page("Steward_requests/Wiki_reports");
+            if reports.is_err() {
+                println!("Error retrieving page: {:?}", reports.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let reports = reports.unwrap();
             let mut reports_text = reports.wikitext().await.unwrap();
             let reports_sections = extract_sections_with_titles(&reports_text);
             for (_title, section) in reports_sections {
@@ -344,13 +428,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     reports_text = reports_text.replace(&section, &new_section);
                 }
             }
-            reports
+            match reports
                 .save(&reports_text, &SaveOptions::summary(&summary("add status")))
                 .await
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error saving page: {:?}", e);
+                }
+            }
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-            let dc = bot.page("Steward_requests/Discussion_closure").unwrap();
+            let dc = bot.page("Steward_requests/Discussion_closure");
+            if dc.is_err() {
+                println!("Error retrieving page: {:?}", dc.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let dc = dc.unwrap();
             let mut dc_text = dc.wikitext().await.unwrap();
             let dc_sections = extract_sections_with_titles(&dc_text);
             for (_title, section) in dc_sections {
@@ -359,12 +455,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     dc_text = dc_text.replace(&section, &new_section);
                 }
             }
-            dc.save(&dc_text, &SaveOptions::summary(&summary("add status")))
+            match dc
+                .save(&dc_text, &SaveOptions::summary(&summary("add status")))
                 .await
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error saving page: {:?}", e);
+                }
+            }
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-            let misc = bot.page("Steward_requests/Miscellaneous").unwrap();
+            let misc = bot.page("Steward_requests/Miscellaneous");
+            if misc.is_err() {
+                println!("Error retrieving page: {:?}", misc.unwrap_err());
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                continue;
+            }
+            let misc = misc.unwrap();
             let mut misc_text = misc.wikitext().await.unwrap();
             let misc_sections = extract_sections_with_titles(&misc_text);
             for (_title, section) in misc_sections {
@@ -376,13 +485,103 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     misc_text = misc_text.replace(&section, &new_section);
                 }
             }
-            misc.save(&misc_text, &SaveOptions::summary(&summary("add status")))
+            match misc
+                .save(&misc_text, &SaveOptions::summary(&summary("add status")))
                 .await
-                .unwrap();
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error saving page: {:?}", e);
+                }
+            }
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+        }
+    });
+
+    let bot_clone5 = Arc::clone(&bot);
+    tokio::spawn(async move {
+        let bot = Arc::clone(&bot_clone5);
+        loop {
+
+            tokio::time::sleep(tokio::time::Duration::from_secs(50)).await;
+
+            let status = check_status(bot.clone()).await;
+            if !status {
+                println!("status is false");
+                // 1時間
+                tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+
+                continue;
+            }
+
+            println!("updating rc/communtiy");
+
+            match bot.page("Meta:RecentChanges/Requests") {
+                Ok(page) => {
+                    let mut string = "<!-- This page is edited by bot. CHANGES MAY BE OVERRIDDEN. If you wish to make changes to the layout, please contact [[User:Waki285]]. -->* [[Meta:Requests for permissions|Requests for permissions]]".to_string();
+                    let rfp = bot.page("Meta:Requests for permissions");
+                    if rfp.is_err() {
+                        println!("Error retrieving page: {:?}", rfp.unwrap_err());
+                        // 1時間
+                        tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                        continue;
+                    }
+                    let rfp = rfp.unwrap();
+                    let rfp_text = rfp.wikitext().await.unwrap();
+                    if rfp_text.contains("{{marker|rfp_v}}") {
+                        string.push_str(format!(" ('''[[Meta:Requests_for_permissions|{}]]''')", rfp_text.matches("{{marker|rfp_v}}").count()).as_str());
+                    }
+                    string.push_str(" • [[Requests for global permissions]]");
+                    let rgp = bot.page("Requests for global permissions");
+                    if rgp.is_err() {
+                        println!("Error retrieving page: {:?}", rgp.unwrap_err());
+                        // 1時間
+                        tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                        continue;
+                    }
+                    let rgp = rgp.unwrap();
+                    let rgp_text = rgp.wikitext().await.unwrap();
+                    if rgp_text.contains("{{marker|rfgp}}") {
+                        string.push_str(format!(" ('''[[Requests_for_global_permissions|{}]]''')", rgp_text.matches("{{marker|rfgp}}").count()).as_str());
+                    }
+                    string.push_str(" • [[Requests for Stewardship]]");
+                    let rs = bot.page("Requests for Stewardship");
+                    if rs.is_err() {
+                        println!("Error retrieving page: {:?}", rs.unwrap_err());
+                        // 1時間
+                        tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                        continue;
+                    }
+                    let rs = rs.unwrap();
+                    let rs_text = rs.wikitext().await.unwrap();
+                    if rs_text.contains("{{marker|rfs}}") {
+                        string.push_str(format!(" ('''[[Requests_for_Stewardship|{}]]''')", rs_text.matches("{{marker|rfs}}").count()).as_str());
+                    }
+                    string.push_str(" • [[Steward requests]] • [[Community portal]] • [[Meta:Administrators' noticeboard|Meta Administrators' noticeboard]]  • [[Meta:Community portal|Meta Community portal]]");
+                    let result = page
+                        .save(
+                            &string,
+                            &SaveOptions::summary(&summary("update rc/community")),
+                        )
+                        .await;
+                    
+                    if let Err(e) = result {
+                        println!("Error saving page: {:?}", e);
+                    }
+
+                    // 1時間
+                    tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+                }
+                Err(e) => {
+                    println!("Error retrieving page: {:?}", e);
+                }
+            }
+
+            // 12時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60 * 12)).await;
         }
     });
 
