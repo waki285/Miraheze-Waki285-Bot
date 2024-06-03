@@ -1,0 +1,10 @@
+api_url = "https://meta.miraheze.org/w/api.php"
+#rest_url = "https://meta.miraheze.org/api/rest_v1"
+rest_url = "https://meta.miraheze.org/w/rest.php"
+
+[auth]
+username = "Example-Bot"
+oauth2_token = "Example-Bot's_OAuth2_Token"
+
+[edit]
+respect_nobots = false # Set to true to avoid edit issues
