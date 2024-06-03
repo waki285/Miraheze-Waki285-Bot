@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap(),
     );
 
-    let bot_clone0 = Arc::clone(&bot);
+    /*let bot_clone0 = Arc::clone(&bot);
     tokio::spawn(async move {
         let bot = Arc::clone(&bot_clone0);
         loop {
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
-    });
+    });*/
 
     let bot_clone = Arc::clone(&bot);
     tokio::spawn(async move {
@@ -100,6 +100,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let bot = Arc::clone(&bot_clone5);
         loop {
             update_rc(&bot).await.ok();
+
+            // 1時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+        }
+    });
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+
+    let bot_clone6 = Arc::clone(&bot);
+    tokio::spawn(async move {
+        let bot = Arc::clone(&bot_clone6);
+        loop {
+            srg_mark_done(&bot).await.ok();
 
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
