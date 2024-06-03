@@ -142,7 +142,7 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
             done += 1;
             let new_section = section.replace("{{status}}", "{{status|done}}") + format!("\n::'''Robot clerk''': {{{{done}}}} by {}. ~~~~\n", did_people.join(", ")).as_str();
             srg_text = srg_text.replace(section, &new_section);
-            log::debug!("done: {:?}", did_people);
+            log::trace!("done: {:?}", did_people);
         }
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
@@ -152,9 +152,9 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
-    log::debug!("done: {}", done);
+    log::trace!("done: {}", done);
 
-    srg.save(&srg_text, &SaveOptions::summary(&summary(&format!("Marking {} request{} as done: TESTING", 
+    srg.save(&srg_text, &SaveOptions::summary(&summary(&format!("Marking {} request{} as done", 
         done, if done == 1 { "" } else { "s" }
     )))).await?;
 
