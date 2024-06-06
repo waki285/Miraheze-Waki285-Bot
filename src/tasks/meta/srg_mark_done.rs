@@ -76,6 +76,11 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
 
+        if accounts.is_empty() && luxotool_ips.is_empty() {
+            log::debug!("{}: No accounts or IPs found, skipping", title);
+            continue;
+        }
+
         let mut locked = 0;
         let mut blocked = 0;
         let mut did_people = vec![];
@@ -135,6 +140,11 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
                 blocked += 1;
                 did_people.push(blocked_info[0]["by"].as_str().unwrap().to_string());
             }
+        }
+
+        if did_people.is_empty() {
+            log::debug!("{}: No accounts or IPs are locked or blocked, skipping", title);
+            continue;
         }
 
         if locked >= accounts.len() && blocked >= luxotool_ips.len() {
