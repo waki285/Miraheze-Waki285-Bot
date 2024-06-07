@@ -294,7 +294,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
     let extensions = extensions.iter().sorted_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase())).cloned().collect::<Vec<&Extension>>();
 
     let mut text = String::new();
-    text.push_str("{{Columns|count=3|\n");
+    text.push_str("<!-- This section is edited by bot. CHANGES MAY BE OVERRIDDEN. If you wish to make changes to the layout, please contact [[User:Waki285]]. -->\n{{Columns|count=3|\n");
     for ext in extensions {
         text.push_str("* ");
         if let Some(caps) = MW_LINK_REGEX.captures(&ext.link) {
@@ -312,7 +312,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
     let page = bot.page("Extensions")?;
     let content = page.wikitext().await?;
     let content = COLUMNS_REGEX.replace(&content, &text);
-    page.save(content.to_string(), &SaveOptions::summary(&summary("List extensions (TESTING)"))).await?;
+    page.save(content.to_string(), &SaveOptions::summary(&summary("List extensions"))).await?;
 
     Ok(())
 }
