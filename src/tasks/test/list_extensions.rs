@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use mwbot::SaveOptions;
+use once_cell::sync::Lazy;
 use php_parser_rs::parser;
+use regex::Regex;
+use itertools::Itertools;
 
 use crate::util::{check_status, summary};
 
@@ -12,6 +15,23 @@ struct Extension {
     pub link: String,
     pub restricted: bool,
 }
+
+const PRELOADED_EXTENSIONS: [&str; 11] = [
+    "categorytree",
+    "cite",
+    "citethispage",
+    "darkmode",
+    "globaluserpage",
+    "mobilefrontend",
+    "purge",
+    "syntaxhighlight_geshi",
+    "urlshortener",
+    "wikieditor",
+    "wikiseo"
+];
+
+const MW_LINK_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^https?://(?:www\.)mediawiki\.org\/wiki\/(.+)").unwrap());
+const COLUMNS_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?m)<!-- This section is edited by bot. CHANGES MAY BE OVERRIDDEN. If you wish to make changes to the layout, please contact \[\[User:Waki285\]\]. -->\n\{\{Columns\|count=3(\s|\S)*?\}\}").unwrap());
 
 pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
     let status = check_status(bot.clone()).await;
@@ -63,7 +83,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
         parser::ast::Expression::ShortArray(array) => {
             array.items.iter().map(|item| {
                 match item {
-                    parser::ast::ArrayItem::KeyValue { key, double_arrow, value } => {
+                    parser::ast::ArrayItem::KeyValue { key, double_arrow: _, value } => {
                         match value {
                             parser::ast::Expression::ShortArray(array) => {
                                 let key = match key {
@@ -77,7 +97,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
                                 };
                                 let is_skin = array.items.iter().any(|item| {
                                     match item {
-                                        parser::ast::ArrayItem::KeyValue { key, double_arrow, value } => {
+                                        parser::ast::ArrayItem::KeyValue { key, double_arrow: _, value } => {
                                             match key {
                                                 parser::ast::Expression::Literal(s) => {
                                                     match s {
@@ -115,7 +135,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
                                 }
                                 let name = array.items.iter().find_map(|item| {
                                     match item {
-                                        parser::ast::ArrayItem::KeyValue { key, double_arrow, value } => {
+                                        parser::ast::ArrayItem::KeyValue { key, double_arrow: _, value } => {
                                             match key {
                                                 parser::ast::Expression::Literal(s) => {
                                                     match s {
@@ -145,7 +165,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
                                 }).unwrap();
                                 let link = array.items.iter().find_map(|item| {
                                     match item {
-                                        parser::ast::ArrayItem::KeyValue { key, double_arrow, value } => {
+                                        parser::ast::ArrayItem::KeyValue { key, double_arrow: _, value } => {
                                             match key {
                                                 parser::ast::Expression::Literal(s) => {
                                                     match s {
@@ -175,7 +195,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
                                 }).unwrap();
                                 let restricted = array.items.iter().find_map(|item| {
                                     match item {
-                                        parser::ast::ArrayItem::KeyValue { key, double_arrow, value } => {
+                                        parser::ast::ArrayItem::KeyValue { key, double_arrow: _, value } => {
                                             match key {
                                                 parser::ast::Expression::Literal(s) => {
                                                     match s {
@@ -185,7 +205,7 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
                                                                     parser::ast::Expression::ShortArray(array) => {
                                                                         Some(array.items.iter().any(|item| {
                                                                             match item {
-                                                                                parser::ast::ArrayItem::KeyValue { key, double_arrow, value } => {
+                                                                                parser::ast::ArrayItem::KeyValue { key, double_arrow: _, value } => {
                                                                                     match key {
                                                                                         parser::ast::Expression::Literal(s) => {
                                                                                             match s {
@@ -270,8 +290,29 @@ pub async fn list_extensions(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error>
         _ => vec![]
     };
 
-    dbg!(extensions);
+    let extensions = extensions.iter().filter(|ext| !PRELOADED_EXTENSIONS.contains(&ext.key.as_str())).collect::<Vec<&Extension>>();
+    let extensions = extensions.iter().sorted_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase())).cloned().collect::<Vec<&Extension>>();
 
+    let mut text = String::new();
+    text.push_str("{{Columns|count=3|\n");
+    for ext in extensions {
+        text.push_str("* ");
+        if let Some(caps) = MW_LINK_REGEX.captures(&ext.link) {
+            text.push_str(&format!("[[mw:{}|{}]]", &caps[1], &ext.name));
+        } else {
+            text.push_str(&format!("[{} {}]", &ext.link, &ext.name));
+        }
+        if ext.restricted {
+            text.push_str(" (Restricted)");
+        }
+        text.push_str("\n");
+    }
+    text.push_str("}}");
+    
+    let page = bot.page("Extensions")?;
+    let content = page.wikitext().await?;
+    let content = COLUMNS_REGEX.replace(&content, &text);
+    page.save(content.to_string(), &SaveOptions::summary(&summary("List extensions (TESTING)"))).await?;
 
     Ok(())
 }

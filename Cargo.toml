@@ -23,5 +23,6 @@ php-parser-rs = { git = "https://github.com/php-rust-tools/parser", version = "0
 reqwest = { version = "0.12.4", features = ["json"] }
 serde = "1.0.203"
 serde_json = "1.0.117"
+itertools = "0.13.0"
 #mediawiki_parser = "0.4.2"
 #tokio-cron-scheduler = "0.10.0"
