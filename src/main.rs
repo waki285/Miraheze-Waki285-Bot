@@ -8,8 +8,9 @@ use tasks::{
     meta::{
         add_status::add_status, clean_sandbox::clean_sandbox, othergroups::othergroups,
         remove_marker::remove_marker, srg_mark_done::srg_mark_done, update_rc::update_rc,
+        list_extensions::list_extensions,
     },
-    test::list_extensions::list_extensions,
+    //test::list_extensions::list_extensions,
 };
 
 #[tokio::main]
@@ -31,6 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap(),
     );
 
+    /*
     // debug
     let bot_clone0 = Arc::clone(&bot);
     tokio::spawn(async move {
@@ -42,6 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
     });
+    */
 
     let bot_clone = Arc::clone(&bot);
     tokio::spawn(async move {
@@ -128,6 +131,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
+        }
+    });
+
+    let bot_clone7 = Arc::clone(&bot);
+    tokio::spawn(async move {
+        let bot = Arc::clone(&bot_clone7);
+        loop {
+            list_extensions(&bot).await.ok();
+
+            // 12時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60 * 12)).await;
         }
     });
 
