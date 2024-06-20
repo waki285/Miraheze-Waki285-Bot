@@ -9,6 +9,10 @@ default-run = "main"
 name = "main"
 path = "src/main.rs"
 
+[[bin]]
+name = "onetime"
+path = "src/onetime.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
