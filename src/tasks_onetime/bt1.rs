@@ -1,3 +1,4 @@
+#![allow(unused)]
 use mwbot::SaveOptions;
 use regex::Regex;
 
