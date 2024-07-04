@@ -1,2 +1,4 @@
 /target
 .config/mwbot.toml
+xmls/*.xml
+!xmls/.gitkeep
