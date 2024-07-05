@@ -28,5 +28,7 @@ reqwest = { version = "0.12.4", features = ["json"] }
 serde = "1.0.203"
 serde_json = "1.0.117"
 itertools = "0.13.0"
+roxmltree = "=0.1.0"
+walkdir = "2.5.0"
 #mediawiki_parser = "0.4.2"
 #tokio-cron-scheduler = "0.10.0"

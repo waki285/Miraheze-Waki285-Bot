@@ -19,12 +19,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let bot = Arc::new(
-        mwbot::Bot::from_path(Path::new("./.config/mwbot.toml"))
+        mwbot::Bot::from_path(Path::new("./.config/mwbot.kagaga.toml"))
             .await
             .unwrap(),
     );
 
-    tasks_onetime::temp::temp(&bot).await?;
+    tasks_onetime::bt2::bt2(&bot).await?;
 
     Ok(())
 }
