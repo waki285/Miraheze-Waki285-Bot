@@ -5,7 +5,7 @@ use regex::Regex;
 use crate::util::summary;
 
 pub async fn bt1(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
-    let list = include_str!("./list.txt");
+    /*let list = include_str!("./list.txt");
 
     let list = list.lines().collect::<Vec<_>>();
 
@@ -25,7 +25,7 @@ pub async fn bt1(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
         println!("Edited: {}", title);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-    }
+    }*/
 
     Ok(())
 }
