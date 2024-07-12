@@ -4,74 +4,8 @@ use std::collections::HashMap;
 use itertools::Itertools;
 //use mwbot::SaveOptions;
 use serde_json::Value;
-use walkdir::WalkDir;
 
-const DISALLOWED_FILE_EXTENSIONS: [&str; 1] = ["desc"];
 
-pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
-    let image_files = WalkDir::new("./xmls/images").into_iter().filter_map(|e| e.ok());
-    let image_files = image_files
-        .filter(|entry| {
-            entry.file_type().is_file() && {
-                let extension = entry.path();
-                dbg!(&extension);
-                let e = extension
-                    .extension()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_lowercase();
-                let d = e.as_str();
-                !DISALLOWED_FILE_EXTENSIONS.contains(&d)
-            }
-        })
-        .map(|e| (e.file_name().to_owned(), e.path().to_owned()))
-        .collect::<Vec<_>>();
-
-    let mut errors = Vec::new();
-
-    for (i, image_file) in image_files.iter().enumerate() {
-        let result = bot
-            .api()
-            .upload(
-                image_file.0.to_str().unwrap(),
-                image_file.1.clone().to_path_buf(),
-                5_000_000,
-                true,
-                &[("formatversion", "2"),("comment", "[[m:User:Waki285-Bot/tasks/BT2|BT2]]: Importing images from old wiki")],
-            )
-            .await;
-
-        match result {
-            Ok(_) => {
-                println!(
-                    "Uploaded: {} ({}/{})",
-                    image_file.0.to_str().unwrap(),
-                    i + 1,
-                    image_files.len()
-                );
-            }
-            Err(e) => {
-                println!(
-                    "Error: {}: {:?} ({}/{})",
-                    image_file.0.to_str().unwrap(),
-                    e,
-                    i + 1,
-                    image_files.len()
-                );
-                errors.push((image_file.0.to_str().unwrap().to_owned(), e));
-            }
-        }
-
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    }
-
-    println!("Errors: {:?}", errors);
-
-    Ok(())
-}
-
-/*
 #[derive(Clone, Debug)]
 struct Page {
     title: String,
@@ -82,8 +16,9 @@ struct Page {
     model: String,
 }
 
-pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
-    let xml = include_str!("../../xmls/kagaga.xml");
+/*
+pub async fn bt4(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
+    let xml = include_str!("../../xmls/diversidades.xml");
     let xml = roxmltree::Document::parse(xml)?;
 
     let mut namespaces = HashMap::new();
@@ -135,14 +70,16 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
         let ns = ns.text()
             .unwrap()
             .parse::<i32>()?;
-        if ns == 3000 {
+        /*if ns == 3000 {
             println!("Skipping: {}", title);
-        }
-        /*let title = if ns == 0 {
-            title
+        }*/
+        let title = if ns == 4 {
+            title.replace("Wiki Diversidades:", "Wiki_Diversidades_🜬:")
+        } else if ns == 5 {
+            title.replace("Wiki Diversidades Discussão:", "Wiki_Diversidades_🜬_talk:")
         } else {
-            format!("{}:{}", namespaces.get(&ns).unwrap(), title)
-        };*/
+            title
+        };
         let text = revision
             .descendants()
             .find(|tag| tag.has_tag_name("text"))
@@ -193,6 +130,7 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
         });
     }
 
+    let mut errors = 0;
     for (i, page) in pages.iter().enumerate() {
         let page = page.clone();
         let title = page.title;
@@ -208,10 +146,10 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
                 ("action", "edit"),
                 ("title", &title),
                 ("text", &text),
-                ("summary", format!("[[m:User:Waki285-Bot/tasks/BT2|Import]]: {} ({}): {}", contributor, timestamp, summary).as_str()),
+                ("summary", format!("[[m:User:Waki285-Bot/tasks/BT4|Import]]: {} ({}): {}", contributor, timestamp, summary).as_str()),
                 ("contentmodel", &model),
                 ("bot", "1"),
-                //("createonly", "1"),
+                ("createonly", "1"),
                 ("watchlist", "nochange"),
                 ("formatversion", "2"),
             ])
@@ -223,13 +161,17 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
             }
             Err(e) => {
                 println!("Error: {:?} ({}/{})", e, i + 1, pages.len());
+                errors += 1;
             }
         }
 
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 
+    println!("Errors: {}", errors);
+
     Ok(())
 }
 
 */
+

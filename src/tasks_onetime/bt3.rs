@@ -8,7 +8,7 @@ use walkdir::WalkDir;
 
 const DISALLOWED_FILE_EXTENSIONS: [&str; 1] = ["desc"];
 
-pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn bt3(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
     let image_files = WalkDir::new("./xmls/images").into_iter().filter_map(|e| e.ok());
     let image_files = image_files
         .filter(|entry| {
@@ -38,7 +38,7 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
                 image_file.1.clone().to_path_buf(),
                 5_000_000,
                 true,
-                &[("formatversion", "2"),("comment", "[[m:User:Waki285-Bot/tasks/BT2|BT2]]: Importing images from old wiki")],
+                &[("formatversion", "2"),("comment", "[[m:User:Waki285-Bot/tasks/BT3|BT3]]: Importing images")],
             )
             .await;
 
@@ -82,8 +82,8 @@ struct Page {
     model: String,
 }
 
-pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
-    let xml = include_str!("../../xmls/kagaga.xml");
+pub async fn bt3(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
+    let xml = include_str!("../../xmls/iewiki.xml");
     let xml = roxmltree::Document::parse(xml)?;
 
     let mut namespaces = HashMap::new();
@@ -138,11 +138,13 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
         if ns == 3000 {
             println!("Skipping: {}", title);
         }
-        /*let title = if ns == 0 {
-            title
+        let title = if ns == 4 {
+            title.replace("Integral Education:", "Integration Education Wiki:")
+        } else if ns == 5 {
+            title.replace("Integral Education talk:", "Integration Education Wiki talk:")
         } else {
-            format!("{}:{}", namespaces.get(&ns).unwrap(), title)
-        };*/
+            title
+        };
         let text = revision
             .descendants()
             .find(|tag| tag.has_tag_name("text"))
@@ -208,7 +210,7 @@ pub async fn bt2(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
                 ("action", "edit"),
                 ("title", &title),
                 ("text", &text),
-                ("summary", format!("[[m:User:Waki285-Bot/tasks/BT2|Import]]: {} ({}): {}", contributor, timestamp, summary).as_str()),
+                ("summary", format!("[[m:User:Waki285-Bot/tasks/BT3|Import]]: {} ({}): {}", contributor, timestamp, summary).as_str()),
                 ("contentmodel", &model),
                 ("bot", "1"),
                 //("createonly", "1"),
