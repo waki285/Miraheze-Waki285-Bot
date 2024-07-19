@@ -5,3 +5,4 @@ pub mod add_status;
 pub mod update_rc;
 pub mod srg_mark_done;
 pub mod list_extensions;
+pub mod get_rw_backlog;

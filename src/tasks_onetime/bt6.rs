@@ -1,10 +1,8 @@
-#![allow(unused)]
 use std::collections::HashMap;
 
 use itertools::Itertools;
 //use mwbot::SaveOptions;
 use serde_json::Value;
-use walkdir::WalkDir;
 
 #[derive(Clone, Debug)]
 struct Page {
@@ -16,9 +14,8 @@ struct Page {
     model: String,
 }
 
-/*
-pub async fn bt5(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
-    let xml = include_str!("../../xmls/horridhenry.xml");
+pub async fn bt6(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
+    let xml = include_str!("../../xmls/zhbackroom.xml");
     let xml = roxmltree::Document::parse(xml)?;
 
     let mut namespaces = HashMap::new();
@@ -123,6 +120,8 @@ pub async fn bt5(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
         });
     }
 
+    let mut errors = Vec::new();
+
     for (i, page) in pages.iter().enumerate() {
         let page = page.clone();
         let title = page.title;
@@ -138,10 +137,10 @@ pub async fn bt5(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
                 ("action", "edit"),
                 ("title", &title),
                 ("text", &text),
-                ("summary", format!("[[m:User:Waki285-Bot/tasks/BT5|Import]]: {} ({}): {}", contributor, timestamp, summary).as_str()),
+                ("summary", format!("[[m:User:Waki285-Bot/tasks/BT6|Import]]: {} ({}): {}", contributor, timestamp, summary).as_str()),
                 ("contentmodel", &model),
                 ("bot", "1"),
-                //("createonly", "1"),
+                ("createonly", "1"),
                 ("watchlist", "nochange"),
                 ("formatversion", "2"),
             ])
@@ -153,13 +152,20 @@ pub async fn bt5(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
             }
             Err(e) => {
                 println!("Error: {:?} ({}/{})", e, i + 1, pages.len());
+                errors.push((title, e));
             }
         }
 
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 
+    if !errors.is_empty() {
+        println!("Errors:");
+        for (title, e) in errors {
+            println!("{}: {:?}", title, e);
+        }
+    }
+
     Ok(())
 }
 
-*/

@@ -4,14 +4,9 @@ mod util;
 
 use std::{path::Path, sync::Arc};
 
-use tasks::{
-    meta::{
-        add_status::add_status, clean_sandbox::clean_sandbox, othergroups::othergroups,
-        remove_marker::remove_marker, srg_mark_done::srg_mark_done, update_rc::update_rc,
-        list_extensions::list_extensions,
-    },
-    //test::list_extensions::list_extensions,
-};
+use tasks::meta::{
+        add_status::add_status, clean_sandbox::clean_sandbox, get_rw_backlog::get_rw_backlog, list_extensions::list_extensions, othergroups::othergroups, remove_marker::remove_marker, srg_mark_done::srg_mark_done, update_rc::update_rc
+    };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -32,13 +27,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap(),
     );
 
-    /*
+    /* 
     // debug
     let bot_clone0 = Arc::clone(&bot);
     tokio::spawn(async move {
         let bot = Arc::clone(&bot_clone0);
         loop {
-            list_extensions(&bot).await.ok();
+            get_rw_backlog(&bot).await.ok();
 
             // 1時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
@@ -144,6 +139,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // 12時間
             tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60 * 12)).await;
+        }
+    });
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+
+    let bot_clone8 = Arc::clone(&bot);
+    tokio::spawn(async move {
+        let bot = Arc::clone(&bot_clone8);
+        loop {
+            get_rw_backlog(&bot).await.ok();
+
+            // 1時間
+            tokio::time::sleep(tokio::time::Duration::from_secs(60 * 60)).await;
         }
     });
 
