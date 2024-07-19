@@ -43,6 +43,16 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
         .map(|x| Utc.from_utc_datetime(&NaiveDateTime::parse_from_str(x, "%H:%M, %d %B %Y").unwrap()))
         .collect::<Vec<_>>();
 
+    let page = bot.page("User:Waki285-Bot/RWQ_backlog/backlog")?;
+
+
+    if datetimes.is_empty() {
+        tokio::spawn(async move {
+            page.save("<1 hour", &SaveOptions::summary(&summary("Updating RWQ backlog duration"))).await.unwrap();
+        });
+        return Ok(());
+    }
+
     let mid = datetimes.len() / 2;
     let mid = datetimes[mid];
 
@@ -51,8 +61,6 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
     let doubled = elapsed_time.num_seconds() * 2;
 
     let duration = format_duration(doubled);
-
-    let page = bot.page("User:Waki285-Bot/RWQ_backlog/backlog")?;
 
     tokio::spawn(async move {
         page.save(duration, &SaveOptions::summary(&summary("Updating RWQ backlog duration"))).await.unwrap();
