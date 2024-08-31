@@ -65,7 +65,7 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
 
     duration.push_str(" (");
     duration.push_str(&datetimes.len().to_string());
-    duration.push_str(&format!("req{})", if datetimes.len() > 1 { "s" } else { "" }));
+    duration.push_str(&format!(" request{})", if datetimes.len() > 1 { "s" } else { "" }));
 
     tokio::spawn(async move {
         page.save(duration, &SaveOptions::summary(&summary(&format!("Updating RWQ backlog duration ({})", duration2)))).await.unwrap();
