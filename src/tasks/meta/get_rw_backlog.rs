@@ -48,7 +48,7 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
 
     if datetimes.is_empty() {
         tokio::spawn(async move {
-            page.save("<1 hour", &SaveOptions::summary(&summary("Updating RWQ backlog duration"))).await.unwrap();
+            page.save("<1 hour (clean!)", &SaveOptions::summary(&summary("Updating RWQ backlog duration"))).await.unwrap();
         });
         return Ok(());
     }
@@ -58,12 +58,17 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
 
     let elapsed_time = Utc::now() - mid;
 
-    let doubled = elapsed_time.num_seconds() * 2;
+    let doubled = elapsed_time.num_seconds() as f64 * 2.0_f64.min(datetimes.len() as f64 / 10.0_f64);
 
-    let duration = format_duration(doubled);
+    let mut duration = format_duration(doubled.round() as i64);
+    let duration2 = duration.clone();
+
+    duration.push_str(" (");
+    duration.push_str(&datetimes.len().to_string());
+    duration.push_str(&format!("req{})", if datetimes.len() > 1 { "s" } else { "" }));
 
     tokio::spawn(async move {
-        page.save(duration, &SaveOptions::summary(&summary("Updating RWQ backlog duration"))).await.unwrap();
+        page.save(duration, &SaveOptions::summary(&summary(&format!("Updating RWQ backlog duration ({})", duration2)))).await.unwrap();
     });
 
     Ok(())
