@@ -27,7 +27,7 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
     log::debug!("Updating RWQ backlog duration");
 
     let client = reqwest::Client::new();
-    let html = client.get("https://meta.miraheze.org/wiki/Special:RequestWikiQueue?uselang=en")
+    let html = client.get("https://meta.miraheze.org/wiki/Special:RequestWikiQueue?uselang=en&limit=999")
         .header("User-Agent", "curl/7.68.0")
         .send()
         .await?
