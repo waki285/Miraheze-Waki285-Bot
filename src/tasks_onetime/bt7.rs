@@ -4,7 +4,7 @@ use regex::Regex;
 use serde_json::Value;
 
 use crate::util::summary;
-
+/* 
 pub async fn bt7(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
     let list = include_str!("list.txt");
 
@@ -29,3 +29,5 @@ pub async fn bt7(bot: &mwbot::Bot) -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+    */

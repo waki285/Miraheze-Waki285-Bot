@@ -28,11 +28,13 @@ pub async fn get_rw_backlog(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> 
 
     let client = reqwest::Client::new();
     let html = client.get("https://meta.miraheze.org/wiki/Special:RequestWikiQueue?uselang=en&limit=999")
-        .header("User-Agent", "curl/7.68.0")
+        .header("User-Agent", "Waki285-Bot (https://meta.miraheze.org/wiki/User:Waki285-Bot; Discord contact: suzuneu)")
         .send()
         .await?
         .text()
         .await?;
+
+    dbg!(&html);
 
     let vis = Vis::load(&html).map_err(|e| anyhow::anyhow!("{:?}", e))?;
 

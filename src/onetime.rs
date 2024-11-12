@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap(),
     );
 
-    tasks_onetime::bt7::bt7(&bot).await?;
+    //tasks_onetime::bt7::bt7(&bot).await?;
 
     Ok(())
 }

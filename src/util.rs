@@ -20,7 +20,7 @@ pub async fn check_status(bot: Arc<mwbot::Bot>) -> bool {
 }
 
 pub fn extract_sections_with_titles(text: &str) -> Vec<(String, String)> {
-    let header_regex = Regex::new(r"^== ?([^=]+) ?==$").unwrap();
+    let header_regex = Regex::new(r"^==\s*?([^=]+)\s*?==$").unwrap();
     let mut sections = Vec::new();
     let mut current_section = VecDeque::new();
     let mut current_title = String::new();
