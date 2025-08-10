@@ -63,7 +63,7 @@ pub async fn othergroups(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
         .get_value(&[
             ("action", "query"),
             ("list", "globalallusers"),
-            ("agugroup", "steward|sre|global-sysop|global-rollbacker"),
+            ("agugroup", "steward|techteam|global-admin|global-rollbacker|wiki-mechanic"),
             ("aguprop", "groups"),
             ("agulimit", "max"),
             ("format", "json"),

@@ -1,5 +1,6 @@
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
+use itertools::Itertools;
 use mwbot::SaveOptions;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -83,7 +84,7 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
 
         let mut locked = 0;
         let mut blocked = 0;
-        let mut did_people = vec![];
+        let mut did_people = HashSet::new();
 
         for account in &accounts {
             let info = bot.api().get_value(&[
@@ -119,7 +120,7 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
                     }
                 });
                 if let Some(user) = user {
-                    did_people.push(user.to_string());
+                    did_people.insert(user.to_string());
                 }
             }
             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
@@ -138,7 +139,7 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
             let blocked_info = &info["query"]["globalblocks"].as_array().unwrap();
             if !blocked_info.is_empty() {
                 blocked += 1;
-                did_people.push(blocked_info[0]["by"].as_str().unwrap().to_string());
+                did_people.insert(blocked_info[0]["by"].as_str().unwrap().to_string());
             }
         }
 
@@ -150,7 +151,7 @@ pub async fn srg_mark_done(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
         if locked >= accounts.len() && blocked >= luxotool_ips.len() {
             log::debug!("{}: Seems like all accounts are locked and all IPs are blocked, marking done", title);
             done += 1;
-            let new_section = section.replace("{{status}}", "{{status|done}}") + format!("\n::'''Robot clerk''': {{{{done}}}} by {}. ~~~~\n", did_people.join(", ")).as_str();
+            let new_section = section.replace("{{status}}", "{{status|done}}") + format!("\n::'''Robot clerk''': {{{{done}}}} by {}. ~~~~\n", did_people.iter().join(", ")).as_str();
             srg_text = srg_text.replace(section, &new_section);
             log::trace!("done: {:?}", did_people);
         }
