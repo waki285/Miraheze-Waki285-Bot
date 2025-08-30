@@ -22,11 +22,13 @@ pub async fn add_status(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
     let mut an_text = an.wikitext().await.unwrap();
     let an_sections = extract_sections_with_titles(&an_text);
     for (_title, section) in an_sections {
+        if section.trim().is_empty() { continue; }
         if !section.to_lowercase().contains("{{status") {
             let new_section = "{{status}}\n".to_string() + &section.trim_start();
-            an_text = an_text.replace(&section, &new_section);
+            an_text = an_text.replacen(&section, &new_section, 1);
         }
     }
+    dbg!(&an_text);
     match an
         .save(&an_text, &SaveOptions::summary(&summary("add status")))
         .await
@@ -47,11 +49,12 @@ pub async fn add_status(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
     let mut global_text = global.wikitext().await.unwrap();
     let global_sections = extract_sections_with_titles(&global_text);
     for (_title, section) in global_sections {
+        if section.trim().is_empty() { continue; }
         if !section.to_lowercase().contains("{{status")
             && !section.to_lowercase().contains("{{permission")
         {
             let new_section = "{{status}}\n".to_string() + &section.trim_start();
-            global_text = global_text.replace(&section, &new_section);
+            global_text = global_text.replacen(&section, &new_section, 1);
         }
     }
     match global
@@ -74,9 +77,10 @@ pub async fn add_status(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
     let mut reports_text = reports.wikitext().await.unwrap();
     let reports_sections = extract_sections_with_titles(&reports_text);
     for (_title, section) in reports_sections {
+        if section.trim().is_empty() { continue; }
         if !section.to_lowercase().contains("{{status") {
             let new_section = "{{status}}\n".to_string() + &section.trim_start();
-            reports_text = reports_text.replace(&section, &new_section);
+            reports_text = reports_text.replacen(&section, &new_section, 1);
         }
     }
     match reports
@@ -99,9 +103,10 @@ pub async fn add_status(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
     let mut dc_text = dc.wikitext().await.unwrap();
     let dc_sections = extract_sections_with_titles(&dc_text);
     for (_title, section) in dc_sections {
+        if section.trim().is_empty() { continue; }
         if !section.to_lowercase().contains("{{status") {
             let new_section = "{{status}}\n".to_string() + &section.trim_start();
-            dc_text = dc_text.replace(&section, &new_section);
+            dc_text = dc_text.replacen(&section, &new_section, 1);
         }
     }
     match dc
@@ -124,12 +129,13 @@ pub async fn add_status(bot: &Arc<mwbot::Bot>) -> Result<(), anyhow::Error> {
     let mut misc_text = misc.wikitext().await.unwrap();
     let misc_sections = extract_sections_with_titles(&misc_text);
     for (_title, section) in misc_sections {
+        if section.trim().is_empty() { continue; }
         if !section.to_lowercase().contains("{{status")
             && !section.to_lowercase().contains("{{sn")
             && !section.to_lowercase().contains("{{permission")
         {
             let new_section = "{{status}}\n".to_string() + &section.trim_start();
-            misc_text = misc_text.replace(&section, &new_section);
+            misc_text = misc_text.replacen(&section, &new_section, 1);
         }
     }
     match misc
